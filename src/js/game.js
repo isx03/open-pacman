@@ -42,6 +42,7 @@ function createGame() {
       dir: 'up',
       speed: GHOST_SPEED,
       kind: g.kind,
+      home: g.home,
     } ) ),
   };
 }
@@ -110,9 +111,52 @@ function movePacman( game ) {
   wrapTunnel( p, width );
 }
 
+// Celda N tiles delante de Pacman segun su direccion.
+function cellAhead( p, tiles ) {
+  const d = DIRS[ p.dir ];
+  return { x: Math.round( p.x ) + d.x * tiles, y: Math.round( p.y ) + d.y * tiles };
+}
+
+function clampCell( cell, grid ) {
+  return {
+    x: Math.max( 0, Math.min( grid[ 0 ].length - 1, cell.x ) ),
+    y: Math.max( 0, Math.min( grid.length - 1, cell.y ) ),
+  };
+}
+
+// Celda objetivo a la que el fantasma intenta acercarse, segun su arquetipo.
+function chaseTarget( game, g ) {
+  const p = game.pacman;
+
+  if ( g.kind === 'emboscador' ) {
+    // 4 tiles delante de Pacman, clamp a los bordes del laberinto.
+    return clampCell( cellAhead( p, 4 ), game.grid );
+  }
+
+  if ( g.kind === 'estratega' ) {
+    // A = 2 tiles delante de Pacman; B = celda del cazador; target = 2A - B.
+    const a = cellAhead( p, 2 );
+    const cazador = game.ghosts.find( ( e ) => e.kind === 'cazador' );
+    const b = cazador
+      ? { x: Math.round( cazador.x ), y: Math.round( cazador.y ) }
+      : { x: Math.round( p.x ), y: Math.round( p.y ) };
+    return { x: 2 * a.x - b.x, y: 2 * a.y - b.y };
+  }
+
+  if ( g.kind === 'cobarde' ) {
+    // Persigue a Pacman si esta a >8 celdas Manhattan; si no, huye a su home.
+    const dist = Math.abs( Math.round( g.x ) - Math.round( p.x ) )
+      + Math.abs( Math.round( g.y ) - Math.round( p.y ) );
+    if ( dist > 8 ) return { x: Math.round( p.x ), y: Math.round( p.y ) };
+    return g.home ? { x: g.home.x, y: g.home.y } : { x: Math.round( p.x ), y: Math.round( p.y ) };
+  }
+
+  // cazador: celda de Pacman.
+  return { x: Math.round( p.x ), y: Math.round( p.y ) };
+}
+
 function decideGhost( game, g ) {
   const grid = game.grid;
-  const p = game.pacman;
 
   const options = Object.keys( DIRS ).filter(
     ( dir ) => dir !== OPPOSITE[ g.dir ] && canMove( grid, g.x, g.y, dir, 'ghost' )
@@ -120,25 +164,20 @@ function decideGhost( game, g ) {
   // Sin salida (callejon): permitir el giro de 180.
   const choices = options.length ? options : [ '' + OPPOSITE[ g.dir ] ];
 
-  if ( g.kind === 'hunter' ) {
-    const px = Math.round( p.x );
-    const py = Math.round( p.y );
-    let best = choices[ 0 ];
-    let bestDist = Infinity;
-    for ( const dir of choices ) {
-      const d = DIRS[ dir ];
-      const nx = g.x + d.x;
-      const ny = g.y + d.y;
-      const dist = Math.abs( nx - px ) + Math.abs( ny - py );
-      if ( dist < bestDist ) {
-        bestDist = dist;
-        best = dir;
-      }
+  const target = chaseTarget( game, g );
+  let best = choices[ 0 ];
+  let bestDist = Infinity;
+  for ( const dir of choices ) {
+    const d = DIRS[ dir ];
+    const nx = g.x + d.x;
+    const ny = g.y + d.y;
+    const dist = Math.abs( nx - target.x ) + Math.abs( ny - target.y );
+    if ( dist < bestDist ) {
+      bestDist = dist;
+      best = dir;
     }
-    g.dir = best;
-  } else {
-    g.dir = choices[ Math.floor( Math.random() * choices.length ) ];
   }
+  g.dir = best;
 }
 
 function moveGhost( game, g ) {
