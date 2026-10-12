@@ -79,6 +79,20 @@ function drawDots( ctx, grid ) {
   }
 }
 
+// Pildoras de poder: dots mas grandes, mismo color.
+function drawPowerPellets( ctx, grid ) {
+  ctx.fillStyle = DOT_COLOR;
+  for ( let y = 0; y < grid.length; y++ ) {
+    for ( let x = 0; x < grid[ 0 ].length; x++ ) {
+      if ( grid[ y ][ x ] !== 4 ) continue;
+      const { cx, cy } = cellCenter( x, y );
+      ctx.beginPath();
+      ctx.arc( cx, cy, 5.5, 0, Math.PI * 2 );
+      ctx.fill();
+    }
+  }
+}
+
 function drawPacman( ctx, p, frame ) {
   const { cx, cy } = cellCenter( p.x, p.y );
   let rot = 0;
@@ -162,8 +176,18 @@ function draw( ctx, game, frame ) {
   drawWalls( ctx, grid );
   drawDoor( ctx, grid );
   drawDots( ctx, grid );
+  drawPowerPellets( ctx, grid );
   drawPacman( ctx, game.pacman, frame );
-  game.ghosts.forEach( ( g ) => drawGhost( ctx, g, GHOST_KIND_COLORS[ g.kind ] || '#ff0000' ) );
+  game.ghosts.forEach( ( g ) => {
+    let color = GHOST_KIND_COLORS[ g.kind ] || '#ff0000';
+    if ( g.frightened ) {
+      // Azul asustado; parpadeo blanco en los ultimos FRIGHTENED_BLINK_FRAMES.
+      const blink = game.frightenedTimer <= FRIGHTENED_BLINK_FRAMES
+        && Math.floor( game.frightenedTimer / 15 ) % 2 === 0;
+      color = blink ? '#ffffff' : '#2121ff';
+    }
+    drawGhost( ctx, g, color );
+  } );
   drawHUD( ctx, game, W );
 }
 
