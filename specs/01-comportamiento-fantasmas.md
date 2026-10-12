@@ -1,6 +1,6 @@
 # SPEC 01 — Cuatro fantasmas con comportamientos diferenciados
 
-> **Status:** Approved
+> **Status:** Implemented
 > **Date:** 2026-09-20
 > **Objective:** Sustituir los 2 fantasmas actuales por 4 con arquetipos clásicos diferenciados, donde el cazador persigue agresivamente a Pacman.
 
