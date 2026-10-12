@@ -58,7 +58,16 @@ const GHOST_STARTS = [
   { x: 14, y: 15, kind: 'cobarde', home: { x: 1, y: 29 } },
 ];
 
+// Celda transitable exterior a la que apuntan los fantasmas mientras estan en
+// el pen (justo encima de la puerta). El pen interior ocupa filas 13-15,
+// cols 11-16; la puerta esta en la fila 12, cols 13-14.
+const PEN_EXIT = { x: 13, y: 11 };
+// Region del pen (incluye la fila 12 de la puerta para no recular en el dintel).
+const PEN_REGION = { x0: 11, x1: 16, y0: 12, y1: 15 };
+
 window.MAZE = MAZE;
 window.TUNNEL_ROW = TUNNEL_ROW;
 window.PACMAN_START = PACMAN_START;
 window.GHOST_STARTS = GHOST_STARTS;
+window.PEN_EXIT = PEN_EXIT;
+window.PEN_REGION = PEN_REGION;

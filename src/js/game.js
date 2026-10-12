@@ -124,9 +124,20 @@ function clampCell( cell, grid ) {
   };
 }
 
+// Esta el fantasma dentro del pen? Se evalua con su celda redondeada.
+function inPen( g ) {
+  const cx = Math.round( g.x );
+  const cy = Math.round( g.y );
+  return cx >= PEN_REGION.x0 && cx <= PEN_REGION.x1
+    && cy >= PEN_REGION.y0 && cy <= PEN_REGION.y1;
+}
+
 // Celda objetivo a la que el fantasma intenta acercarse, segun su arquetipo.
 function chaseTarget( game, g ) {
   const p = game.pacman;
+
+  // Mientras este en el pen, ignorar el arquetipo y subir por la puerta.
+  if ( inPen( g ) ) return { x: PEN_EXIT.x, y: PEN_EXIT.y };
 
   if ( g.kind === 'emboscador' ) {
     // 4 tiles delante de Pacman, clamp a los bordes del laberinto.
